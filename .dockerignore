@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+.dockerignore
+*.log
+.env*.local
+coverage
+tests
+.next
+out
