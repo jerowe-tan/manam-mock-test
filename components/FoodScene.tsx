@@ -7,10 +7,12 @@ export default function FoodScene({
   index,
   reduced,
   onFailure,
+  simulateFailure = false,
 }: {
   index: number;
   reduced: boolean;
   onFailure: () => void;
+  simulateFailure?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const target = useRef(index * 10);
@@ -24,6 +26,7 @@ export default function FoodScene({
     if (!element) return;
     let renderer: T.WebGLRenderer;
     try {
+      if (simulateFailure) throw new Error("Development WebGL failure fixture");
       renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
     } catch {
       onFailure();
@@ -87,7 +90,12 @@ export default function FoodScene({
       world.children.forEach((group) => {
         group.visible = Math.abs(group.position.x - x) < 7;
       });
-      renderer.render(scene, camera);
+      try {
+        renderer.render(scene, camera);
+      } catch {
+        onFailure();
+        return;
+      }
       if (x !== target.current) frame = requestAnimationFrame(render);
     };
     const requestRender = () => {
@@ -140,6 +148,6 @@ export default function FoodScene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [reduced, onFailure]);
+  }, [reduced, onFailure, simulateFailure]);
   return <div ref={host} className="food-canvas" aria-hidden="true" />;
 }

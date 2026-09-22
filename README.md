@@ -19,7 +19,7 @@ Open http://localhost:3000/experience. Root redirects there.
 
 ## Structure
 
-- `app/experience/page.tsx`: server catalog read and initial render.
+- `app/experience/page.tsx`: server catalog read, static header/footer, full ingredient descriptions, and server-rendered content slots.
 - `app/api/estimate/route.ts`: JSON parsing, development fixtures, authoritative estimate.
 - `components/Experience.tsx`: selection, navigation, form, accessibility, lazy scene boundary.
 - `components/FoodScene.tsx`: camera movement, WebGL lifecycle, visibility and resize observers.
@@ -46,7 +46,7 @@ Estimate input changes abort pending requests, advance a version counter, clear 
 
 ## Manual fixtures and checks
 
-Copy `.env.example` to `.env.local`. Enable `DEMO_EMPTY`, `DEMO_DELAY`, or `DEMO_ERROR` with `1`, then restart development server. Production ignores all three.
+Copy `.env.example` to `.env.local`. Enable `DEMO_EMPTY`, `DEMO_DELAY`, `DEMO_ERROR`, or `DEMO_WEBGL_FAILURE` with `1`, then restart development server. Production ignores all fixtures.
 
 - Empty: page remains navigable, renders no invalid scene, displays table empty state.
 - Delay: submit a selected dish, change portion before response; old total must not appear. Submit again for new total.
@@ -55,6 +55,8 @@ Copy `.env.example` to `.env.local`. Enable `DEMO_EMPTY`, `DEMO_DELAY`, or `DEMO
 - Reduced motion: enable OS preference before loading; 2D starts selected. Explicit 3D changes dish without flight.
 - WebGL disabled/context lost: scene switches to 2D; form remains usable.
 - Inspect 360px, tablet and desktop widths, plus 200% zoom. No horizontal overflow.
+
+Saved browser regressions live in `tests/browser-flow.mjs`. They use the Codex browser-use Tab interface (no extra browser dependency). In a browser session with a local `tab` handle, import the module by absolute file URL, then run `await checks.checkBrowserFlow(tab)`. Run `checkDelayedResponse(tab)` with `DEMO_DELAY=1`, and `checkFailureFallback(tab)` with `DEMO_WEBGL_FAILURE=1` and `DEMO_ERROR=1`. Functions throw on assertion failure and return a PASS summary. `npm test` runs independent server/selection tests; these browser checks require the running app and browser session.
 
 ## Limitations
 
