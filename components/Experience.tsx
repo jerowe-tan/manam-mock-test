@@ -4,6 +4,7 @@ import {
   Component,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
@@ -57,6 +58,11 @@ export default function Experience({
   const [mode, setMode] = useState<"2D" | "3D">("2D");
   const [reduced, setReduced] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [hovering, setHovering] = useState(false);
+  const [journeyVisible, setJourneyVisible] = useState(true);
+  const [pageVisible, setPageVisible] = useState(true);
+  const journey = useRef<HTMLElement>(null);
   const [selection, setSelection] = useState<Selection[]>([]);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [pending, setPending] = useState(false);
@@ -64,8 +70,9 @@ export default function Experience({
   const [announcement, setAnnouncement] = useState("");
   const version = useRef(0);
   const request = useRef<AbortController | null>(null);
-  const filtered = dishes.filter(
-    (d) => category === "All" || d.category === category,
+  const filtered = useMemo(
+    () => dishes.filter((d) => category === "All" || d.category === category),
+    [dishes, category],
   );
   const dish = reconcileSelection(filtered, activeId);
   const position = filtered.findIndex((d) => d.id === dish?.id);
@@ -78,9 +85,13 @@ export default function Experience({
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(media.matches);
     setMode(media.matches ? "2D" : "3D");
+    setPlaying(!media.matches);
     const change = () => {
       setReduced(media.matches);
-      if (media.matches) setMode("2D");
+      if (media.matches) {
+        setMode("2D");
+        setPlaying(false);
+      }
     };
     media.addEventListener("change", change);
     return () => {
@@ -88,6 +99,45 @@ export default function Experience({
       request.current?.abort();
     };
   }, []);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => setJourneyVisible(entry.isIntersecting),
+      { threshold: 0.2 },
+    );
+    if (journey.current) observer.observe(journey.current);
+    const visibility = () => setPageVisible(!document.hidden);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", visibility);
+    };
+  }, []);
+  useEffect(() => {
+    if (
+      !playing ||
+      reduced ||
+      hovering ||
+      !journeyVisible ||
+      !pageVisible ||
+      filtered.length < 2
+    )
+      return;
+    const timer = window.setTimeout(
+      () => setActiveId(filtered[(position + 1) % filtered.length].id),
+      7000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [
+    playing,
+    reduced,
+    hovering,
+    journeyVisible,
+    pageVisible,
+    position,
+    category,
+    dishes,
+    filtered,
+  ]);
   function update(items: Selection[]) {
     version.current++;
     request.current?.abort();
@@ -99,6 +149,12 @@ export default function Experience({
   function addDish() {
     if (!dish?.available) return;
     if (!current) {
+      if (selection.length >= 3) {
+        setAnnouncement(
+          "Your tasting table holds three dishes. Remove one to try another.",
+        );
+        return;
+      }
       update([...selection, { id: dish.id, size: "Small", quantity: 1 }]);
       setAnnouncement(`${dish.name} added to your table.`);
     } else
@@ -157,14 +213,28 @@ export default function Experience({
   }
   return (
     <>
-      <section id="journey" className="journey" aria-labelledby="journey-title">
+      <section
+        ref={journey}
+        id="journey"
+        className="journey"
+        aria-labelledby="journey-title"
+        onFocusCapture={(event) => {
+          if ((event.target as HTMLElement).id !== "autoplay-toggle")
+            setPlaying(false);
+        }}
+      >
         <div className="intro-line">
           <span>FAMILIAR FLAVORS. A FRESH PERSPECTIVE.</span>
           <span className="edition">A little taste of home / 01</span>
         </div>
         <div className="hero-composition">
           {hero}
-          <div className="stage" data-mode={mode}>
+          <div
+            className="stage"
+            data-mode={mode}
+            onMouseEnter={() => setHovering(true)}
+            onMouseLeave={() => setHovering(false)}
+          >
             <span className="table-lettering" aria-hidden="true">
               kain tayo!
             </span>
@@ -172,6 +242,7 @@ export default function Experience({
               <SceneBoundary onFailure={failScene}>
                 <Scene
                   index={dish.scene}
+                  dishes={dishes}
                   reduced={reduced}
                   onFailure={failScene}
                   simulateFailure={simulateWebGLFailure}
@@ -182,10 +253,23 @@ export default function Experience({
                 className={`flat-dish flat-${dish?.id ?? "empty"}`}
                 aria-hidden="true"
               >
-                <div className="flat-plate">
-                  <span>{dish?.shortName ?? "Your table"}</span>
-                  <small>{dish?.note ?? "Something good is coming."}</small>
-                </div>
+                {dish ? (
+                  <img
+                    className="reference-photo"
+                    src={dish.photo}
+                    alt={dish.name}
+                    width={600}
+                    height={600}
+                    onError={(event) => {
+                      event.currentTarget.style.visibility = "hidden";
+                    }}
+                  />
+                ) : (
+                  <div className="flat-plate">
+                    <span>Your table</span>
+                    <small>Something good is coming.</small>
+                  </div>
+                )}
               </div>
             )}
             <div className="scene-note">
@@ -194,8 +278,8 @@ export default function Experience({
               </span>
               <span>
                 {mode === "3D"
-                  ? "A new angle on an old favorite."
-                  : "All the flavor. A quieter view."}
+                  ? "Manam’s food. A new perspective."
+                  : "Real food, from Manam’s menu."}
               </span>
             </div>
             <div className="mode-switch" aria-label="View mode">
@@ -214,6 +298,22 @@ export default function Experience({
               </button>
             </div>
           </div>
+        </div>
+        <div className="autoplay-bar">
+          <span>{dishes.length} favorites. One delicious journey.</span>
+          <button
+            id="autoplay-toggle"
+            disabled={reduced || filtered.length < 2}
+            aria-pressed={playing}
+            onClick={() => setPlaying(!playing)}
+          >
+            {reduced ? "Motion reduced" : playing ? "Pause tour" : "Play tour"}
+          </button>
+          <span className="tour-status">
+            {playing && !hovering
+              ? "Next dish in 7 seconds"
+              : "Browse at your own pace"}
+          </span>
         </div>
         {failed && (
           <p className="fallback-notice" role="status">
@@ -248,14 +348,18 @@ export default function Experience({
                 </span>
                 <button
                   className="primary-button"
-                  disabled={!dish.available}
+                  disabled={
+                    !dish.available || (!current && selection.length >= 3)
+                  }
                   onClick={addDish}
                 >
                   {!dish.available
                     ? "Coming to the table"
-                    : current
-                      ? "View your table"
-                      : "Add to your table"}
+                    : !current && selection.length >= 3
+                      ? "Table full · 3 dishes"
+                      : current
+                        ? "View your table"
+                        : "Add to your table"}
                   <span aria-hidden="true">{dish.available ? "+" : ""}</span>
                 </button>
               </>
@@ -288,8 +392,15 @@ export default function Experience({
                 aria-pressed={dish?.id === d.id}
                 onClick={() => setActiveId(d.id)}
               >
+                <img
+                  src={d.photo}
+                  alt=""
+                  width={70}
+                  height={70}
+                  loading="lazy"
+                />
                 <span>{String(i + 1).padStart(2, "0")}</span>
-                {d.shortName}
+                <span className="dish-tab-name">{d.shortName}</span>
               </button>
             ))}
           </div>

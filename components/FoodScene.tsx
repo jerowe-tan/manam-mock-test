@@ -1,24 +1,26 @@
 "use client";
 import { useEffect, useRef } from "react";
 import * as T from "three";
-import { buildTable } from "./food-models";
+import type { Dish } from "@/lib/types";
 
 export default function FoodScene({
   index,
+  dishes,
   reduced,
   onFailure,
   simulateFailure = false,
 }: {
   index: number;
+  dishes: Dish[];
   reduced: boolean;
   onFailure: () => void;
   simulateFailure?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const target = useRef(index * 10);
+  const target = useRef(index * 7);
   const wake = useRef<() => void>(() => {});
   useEffect(() => {
-    target.current = index * 10;
+    target.current = index * 7;
     wake.current();
   }, [index]);
   useEffect(() => {
@@ -33,45 +35,23 @@ export default function FoodScene({
       return;
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = T.PCFSoftShadowMap;
-    renderer.setClearColor(0x000000, 0);
-    renderer.toneMapping = T.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.35;
+    renderer.setClearColor(0, 0);
     element.appendChild(renderer.domElement);
     const scene = new T.Scene();
-    const world = buildTable();
-    scene.add(world);
-    const ground = new T.Mesh(
-      new T.PlaneGeometry(80, 40),
-      new T.ShadowMaterial({ opacity: 0.18 }),
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set(10, -0.13, 0);
-    ground.receiveShadow = true;
-    scene.add(ground);
-    scene.add(new T.HemisphereLight("#fff4d7", "#9c8149", 2.7));
-    const light = new T.DirectionalLight("#fff3d6", 4);
-    light.position.set(-3, 9, 5);
-    light.castShadow = true;
-    light.shadow.mapSize.set(2048, 2048);
-    light.shadow.camera.left = -7;
-    light.shadow.camera.right = 7;
-    light.shadow.camera.top = 7;
-    light.shadow.camera.bottom = -7;
-    light.shadow.normalBias = 0.025;
-    scene.add(light, light.target);
-    const fill = new T.DirectionalLight("#fff9ea", 1.6);
-    fill.position.set(3, 3, -5);
-    scene.add(fill);
-    const camera = new T.PerspectiveCamera(37, 1, 0.1, 100);
-    let x = target.current,
-      frame = 0,
+    const camera = new T.PerspectiveCamera(38, 1, 0.1, 150);
+    const geometry = new T.PlaneGeometry(4.9, 4.9);
+    const frameGeometry = new T.BoxGeometry(5.14, 5.4, 0.12);
+    const frameMaterial = new T.MeshBasicMaterial({ color: "#faf7ee" });
+    const frames: T.Group[] = [],
+      textures: T.Texture[] = [],
+      photoMaterials: T.MeshBasicMaterial[] = [];
+    let disposed = false,
       visible = true,
-      disposed = false,
+      frame = 0,
+      x = target.current,
       width = 1,
-      height = 1;
-    let previousTime = 0;
+      height = 1,
+      previousTime = 0;
     const render = (time = 0) => {
       frame = 0;
       if (disposed || !visible || document.hidden) return;
@@ -81,14 +61,11 @@ export default function FoodScene({
         ? target.current
         : T.MathUtils.lerp(x, target.current, 1 - Math.exp(-dt * 5));
       if (Math.abs(x - target.current) < 0.002) x = target.current;
-      const distance = width / height < 0.85 ? 1.3 : 1;
-      camera.position.set(x + 3.4 * distance, 6.7 * distance, 7.1 * distance);
-      camera.lookAt(x, 0.35, 0);
-      light.position.x = x - 3;
-      light.target.position.set(x, 0, 0);
-      light.target.updateMatrixWorld();
-      world.children.forEach((group) => {
-        group.visible = Math.abs(group.position.x - x) < 7;
+      const distance = width / height < 0.85 ? 10 : 8.6;
+      camera.position.set(x + 0.6, 0.45, distance);
+      camera.lookAt(x, 0, 0);
+      frames.forEach((group) => {
+        group.visible = Math.abs(group.position.x - x) < 8;
       });
       try {
         renderer.render(scene, camera);
@@ -102,6 +79,41 @@ export default function FoodScene({
       if (!frame && !disposed) frame = requestAnimationFrame(render);
     };
     wake.current = requestRender;
+    const loader = new T.TextureLoader();
+    dishes.forEach((dish) => {
+      const group = new T.Group();
+      group.position.x = dish.scene * 7;
+      group.rotation.set(-0.035, -0.1, -0.055);
+      scene.add(group);
+      frames.push(group);
+      const backing = new T.Mesh(frameGeometry, frameMaterial);
+      backing.position.y = -0.1;
+      group.add(backing);
+      const photoMaterial = new T.MeshBasicMaterial({ color: "#e4ddc7" });
+      photoMaterials.push(photoMaterial);
+      const photo = new T.Mesh(geometry, photoMaterial);
+      photo.position.z = 0.07;
+      group.add(photo);
+      const texture = loader.load(
+        dish.photo,
+        (loaded) => {
+          if (disposed) {
+            loaded.dispose();
+            return;
+          }
+          loaded.colorSpace = T.SRGBColorSpace;
+          photoMaterial.map = loaded;
+          photoMaterial.color.set("#ffffff");
+          photoMaterial.needsUpdate = true;
+          requestRender();
+        },
+        undefined,
+        () => {
+          if (!disposed) onFailure();
+        },
+      );
+      textures.push(texture);
+    });
     const resize = new ResizeObserver(([entry]) => {
       width = entry.contentRect.width;
       height = entry.contentRect.height;
@@ -132,22 +144,14 @@ export default function FoodScene({
       document.removeEventListener("visibilitychange", requestRender);
       renderer.domElement.removeEventListener("webglcontextlost", lost);
       wake.current = () => {};
-      const geometries = new Set<T.BufferGeometry>(),
-        materials = new Set<T.Material>();
-      scene.traverse((object) => {
-        if (object instanceof T.Mesh) {
-          geometries.add(object.geometry);
-          (Array.isArray(object.material)
-            ? object.material
-            : [object.material]
-          ).forEach((m) => materials.add(m));
-        }
-      });
-      geometries.forEach((g) => g.dispose());
-      materials.forEach((m) => m.dispose());
+      geometry.dispose();
+      frameGeometry.dispose();
+      frameMaterial.dispose();
+      photoMaterials.forEach((m) => m.dispose());
+      textures.forEach((t) => t.dispose());
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [reduced, onFailure, simulateFailure]);
+  }, [dishes, reduced, onFailure, simulateFailure]);
   return <div ref={host} className="food-canvas" aria-hidden="true" />;
 }

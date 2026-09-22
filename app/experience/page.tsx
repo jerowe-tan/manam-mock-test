@@ -40,7 +40,7 @@ export default function Page() {
           dishes={dishes}
           simulateWebGLFailure={simulateWebGLFailure}
           hero={
-            <div className="hero-copy">
+            <div key="hero-copy" className="hero-copy">
               <p className="chapter">Come hungry. Stay a little.</p>
               <h1 id="journey-title">
                 A table full
@@ -58,7 +58,7 @@ export default function Page() {
             </div>
           }
           tableIntro={
-            <div className="table-intro">
+            <div key="table-intro" className="table-intro">
               <p className="eyebrow">GOOD FOOD IS BETTER SHARED</p>
               <h2 id="table-title">
                 Make room
@@ -84,6 +84,14 @@ export default function Page() {
         <section className="menu-notes" aria-label="Dish ingredients">
           {dishes.map((d) => (
             <article key={d.id}>
+              <img
+                className="menu-photo"
+                src={d.photo}
+                alt={d.name}
+                width={600}
+                height={600}
+                loading="lazy"
+              />
               <p className="eyebrow">
                 {d.category} ·{" "}
                 {d.available ? "On our demo table" : "Coming soon"}
@@ -101,6 +109,13 @@ export default function Page() {
       <footer>
         <span className="wordmark">manam</span>
         <p>A love letter to Filipino comfort food.</p>
+        <a
+          href="https://manam.momentfood.com/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Food photography: Manam / The Moment Group
+        </a>
         <span>Independent concept · Not an official Manam website</span>
       </footer>
     </>

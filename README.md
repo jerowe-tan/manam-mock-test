@@ -1,6 +1,6 @@
 # Manam: Through the Table
 
-Independent, yellow-led 3D restaurant concept. Three procedural dishes, a keyboard-accessible 2D experience, and a server-calculated tasting estimate. No checkout or real orders.
+Independent, yellow-led 3D restaurant concept. Ten dishes with photography sourced from Manam’s reference menu, an automatic camera tour, keyboard-accessible 2D view, and a server-calculated tasting estimate. No checkout or real orders.
 
 ## Run
 
@@ -23,7 +23,7 @@ Open http://localhost:3000/experience. Root redirects there.
 - `app/api/estimate/route.ts`: JSON parsing, development fixtures, authoritative estimate.
 - `components/Experience.tsx`: selection, navigation, form, accessibility, lazy scene boundary.
 - `components/FoodScene.tsx`: camera movement, WebGL lifecycle, visibility and resize observers.
-- `components/food-models.ts`: deterministic procedural food geometry.
+- `public/food/`: ten locally stored reference photos; original sources recorded in `public/food/SOURCES.md`.
 - `lib/catalog.ts`: server-consumed catalog and pricing validation; never imported by client code.
 - `lib/types.ts`: shared types, formatting, selection reconciliation.
 - `tests/estimate.test.ts`: pricing, invalid inputs, filtering and HTTP behavior.
@@ -32,9 +32,9 @@ Open http://localhost:3000/experience. Root redirects there.
 
 Reference: https://manam.momentfood.com/, inspected September 22, 2026. Current order page uses teal, photography, and a thin Manam wordmark. User requested yellow; `#f5cf56` is our warm marigold interpretation, not a verified official brand token. Typography uses local Arial and Georgia: an understated wordmark against generous editorial serif headings. No remote font requests.
 
-ENERGY 3 / RHYTHM 3 / MOTION 2. Food is focal point; large yellow opening contrasts with quieter cream tasting area. Shadows ground vessels on table. Camera moves only in response to selection, then stops. Circular view controls communicate mutually exclusive modes. Arrows indicate navigation, external destinations and section movement. Plus sign adds a dish. Food models intentionally stylized, not photorealistic.
+ENERGY 3 / RHYTHM 3 / MOTION 2. Real food photography is focal point; large yellow opening contrasts with quieter cream tasting area. Photos sit in a Three.js gallery with spatial camera transitions. Tour advances every seven seconds, wraps at the end, and pauses offscreen, on hidden tabs, and while hovering over photography. Keyboard focus/manual navigation stops the tour until Play is pressed. Reduced motion disables autoplay. Thumbnails support direct selection; all ten dishes also appear below with descriptions.
 
-Sisig and watermelon sinigang are inspired by restaurant dishes; copy and all prices are demo content. Ube dessert is an imagined concept, unavailable in demo. No claim of official affiliation. Default portion prices are fixtures, not copied live prices.
+Photos and dish identities come from the restaurant’s supplied reference. Descriptions are original summaries; portion prices and availability remain demo fixtures. Bibingkang Ube remains unavailable in demo to exercise that state. No claim of official affiliation or current price/stock synchronization.
 
 ## Architecture
 
@@ -60,4 +60,4 @@ Saved browser regressions live in `tests/browser-flow.mjs`. They use the Codex b
 
 ## Limitations
 
-No saved cart, stock system, tax, delivery charges or ordering. Estimate is per selected portion quantity. Food assets are stylized geometry; some overlaps model chopped ingredients. No automatic animation, drag camera, or scroll interception. Server prices are shipped to clients for display, but calculations use server catalog only.
+No saved cart, stock system, tax, delivery charges or ordering. Estimate is limited to three selected dishes. Photographs are flat images displayed in a real 3D gallery, not reconstructed volumetric food models. Reference images are 400px source assets; enlarging cannot add detail. Source photography remains Manam/The Moment Group’s content. Server prices are shipped to clients for display, but calculations use server catalog only.

@@ -18,14 +18,14 @@ export async function checkBrowserFlow(tab) {
   );
   check(
     await page
-      .getByRole("group", { name: "Sizzling sisig", exact: true })
+      .getByRole("group", { name: "House Crispy Sisig", exact: true })
       .isVisible(),
     "Filtering must preserve selected items",
   );
   await button("Savory").click();
   await button("The whole table").click();
   const sisig = page.getByRole("group", {
-    name: "Sizzling sisig",
+    name: "House Crispy Sisig",
     exact: true,
   });
   await sisig.getByLabel("Portion").selectOption("Large");
@@ -47,7 +47,7 @@ export async function checkBrowserFlow(tab) {
     (await page.getByText("Your estimate", { exact: true }).count()) === 0,
     "Input changes must remove stale totals",
   );
-  await button("Remove Sizzling sisig").press("Enter");
+  await button("Remove House Crispy Sisig").press("Enter");
   await button("Remove Watermelon sinigang").press("Enter");
   check(
     !(await button("Calculate estimate").isEnabled()),
@@ -72,7 +72,7 @@ export async function checkDelayedResponse(tab) {
     .getByRole("button", { name: "Calculate estimate", exact: true })
     .click();
   await page
-    .getByRole("group", { name: "Sizzling sisig", exact: true })
+    .getByRole("group", { name: "House Crispy Sisig", exact: true })
     .getByLabel("Portion")
     .selectOption("Large");
   await page
@@ -114,7 +114,7 @@ export async function checkFailureFallback(tab) {
     .waitFor({ state: "visible", timeoutMs: 20000 });
   if (
     !(await page
-      .getByRole("group", { name: "Sizzling sisig", exact: true })
+      .getByRole("group", { name: "House Crispy Sisig", exact: true })
       .isVisible())
   )
     throw new Error("Server failure lost inputs");

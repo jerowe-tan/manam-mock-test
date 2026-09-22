@@ -10,6 +10,7 @@ export type Dish = {
   prices: Record<Size, number>;
   available: boolean;
   scene: number;
+  photo: string;
 };
 export type Selection = { id: string; size: Size; quantity: number };
 export type Estimate = {
