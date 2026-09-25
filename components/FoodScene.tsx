@@ -2,39 +2,20 @@
 import { useEffect, useRef } from "react";
 import * as T from "three";
 import type { Dish } from "@/lib/types";
+import { dishTravel, INTRO_END, OUTRO_START, tourProgress } from "@/lib/tour";
 
 type Pose = { x: number; y: number; z: number; lookX: number; lookY: number };
 
 export default function FoodScene({
-  index,
   dishes,
-  order,
-  reduced,
   onFailure,
   simulateFailure = false,
 }: {
-  index: number;
   dishes: Dish[];
-  order: number[];
-  reduced: boolean;
   onFailure: () => void;
   simulateFailure?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
-  const previousIndex = useRef(index);
-  const pending = useRef<{ index: number; wrap: boolean } | null>(null);
-  const wake = useRef<() => void>(() => {});
-
-  useEffect(() => {
-    if (index === previousIndex.current) return;
-    pending.current = {
-      index,
-      wrap:
-        previousIndex.current === order[order.length - 1] && index === order[0],
-    };
-    previousIndex.current = index;
-    wake.current();
-  }, [index, order]);
 
   useEffect(() => {
     const element = host.current;
@@ -132,7 +113,6 @@ export default function FoodScene({
     const geometries: T.BufferGeometry[] = [];
     let disposed = false;
     let frame = 0;
-    let delayTimer = 0;
     let visible = true;
     const addBox = (
       width: number,
@@ -245,10 +225,10 @@ export default function FoodScene({
       const spot = positions.get(sceneIndex) ?? { x: 0, y: 0 };
       return {
         x: spot.x + (aspect < 0.75 ? 0 : 0.25),
-        y: spot.y + 0.1,
-        z: aspect < 0.75 ? 6.2 : 4.5,
+        y: spot.y - 0.35,
+        z: aspect < 0.75 ? 7 : 5.2,
         lookX: spot.x,
-        lookY: spot.y,
+        lookY: spot.y - 0.45,
       };
     };
     const mix = (a: Pose, b: Pose, t: number): Pose => ({
@@ -259,59 +239,35 @@ export default function FoodScene({
       lookY: T.MathUtils.lerp(a.lookY, b.lookY, t),
     });
     const ease = (t: number) => t * t * (3 - 2 * t);
-    let currentScene = index;
-    let pose = reduced ? focus(index) : overview();
-    let motion:
-      | { from: Pose; to: Pose; start: number; duration: number; wrap: boolean }
-      | undefined = reduced
-      ? undefined
-      : {
-          from: overview(),
-          to: focus(index),
-          start: performance.now() + 4000,
-          duration: 2400,
-          wrap: false,
-        };
-    const render = (time = performance.now()) => {
+    const shell = element.closest<HTMLElement>(".hero-shell");
+    const poseAtScroll = (): Pose => {
+      const progress = shell ? tourProgress(shell) : 0;
+      const first = dishes[0]?.scene ?? 0;
+      const last = dishes[dishes.length - 1]?.scene ?? first;
+      if (progress <= INTRO_END)
+        return mix(overview(), focus(first), ease(progress / INTRO_END));
+      if (progress >= OUTRO_START)
+        return mix(
+          focus(last),
+          overview(),
+          ease((progress - OUTRO_START) / (1 - OUTRO_START)),
+        );
+      const travel = dishTravel(progress, dishes.length);
+      const current = Math.floor(travel);
+      const fraction = travel - current;
+      const next = Math.min(current + 1, dishes.length - 1);
+      const pose = mix(
+        focus(dishes[current].scene),
+        focus(dishes[next].scene),
+        ease(fraction),
+      );
+      pose.z += Math.sin(Math.PI * fraction) * 1.2;
+      return pose;
+    };
+    const render = () => {
       frame = 0;
       if (disposed || !visible || document.hidden) return;
-      if (pending.current) {
-        window.clearTimeout(delayTimer);
-        delayTimer = 0;
-        const next = pending.current;
-        pending.current = null;
-        currentScene = next.index;
-        motion = reduced
-          ? undefined
-          : {
-              from: pose,
-              to: focus(currentScene),
-              start: time,
-              duration: next.wrap ? 4900 : 2300,
-              wrap: next.wrap,
-            };
-        if (reduced) pose = focus(currentScene);
-      }
-      if (motion) {
-        const elapsed = (time - motion.start) / motion.duration;
-        if (elapsed >= 1) {
-          pose = motion.to;
-          motion = undefined;
-        } else if (elapsed >= 0) {
-          if (motion.wrap) {
-            const wide = overview();
-            pose =
-              elapsed < 0.42
-                ? mix(motion.from, wide, ease(elapsed / 0.42))
-                : elapsed < 0.58
-                  ? wide
-                  : mix(wide, motion.to, ease((elapsed - 0.58) / 0.42));
-          } else {
-            pose = mix(motion.from, motion.to, ease(elapsed));
-            if (motion.from.z < 8) pose.z += 2.1 * Math.sin(Math.PI * elapsed);
-          }
-        }
-      }
+      const pose = poseAtScroll();
       camera.position.set(pose.x, pose.y, pose.z);
       camera.lookAt(pose.lookX, pose.lookY, 0);
       try {
@@ -320,19 +276,10 @@ export default function FoodScene({
         onFailure();
         return;
       }
-      if (motion && time < motion.start && !delayTimer) {
-        delayTimer = window.setTimeout(() => {
-          delayTimer = 0;
-          requestRender();
-        }, motion.start - time);
-      } else if (motion && time >= motion.start) {
-        frame = requestAnimationFrame(render);
-      }
     };
     const requestRender = () => {
       if (!frame && !disposed) frame = requestAnimationFrame(render);
     };
-    wake.current = requestRender;
     const resize = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
       if (!width || !height) return;
@@ -341,13 +288,6 @@ export default function FoodScene({
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
-      if (motion && motion.start > performance.now()) {
-        motion.from = overview();
-        motion.to = focus(currentScene);
-        pose = motion.from;
-      } else if (!motion && reduced) {
-        pose = focus(currentScene);
-      }
       requestRender();
     });
     resize.observe(element);
@@ -362,16 +302,16 @@ export default function FoodScene({
     };
     renderer.domElement.addEventListener("webglcontextlost", lost);
     document.addEventListener("visibilitychange", requestRender);
+    window.addEventListener("scroll", requestRender, { passive: true });
     requestRender();
     return () => {
       disposed = true;
       cancelAnimationFrame(frame);
-      window.clearTimeout(delayTimer);
       resize.disconnect();
       observer.disconnect();
       document.removeEventListener("visibilitychange", requestRender);
+      window.removeEventListener("scroll", requestRender);
       renderer.domElement.removeEventListener("webglcontextlost", lost);
-      wake.current = () => {};
       geometries.forEach((geometry) => geometry.dispose());
       photoMaterials.forEach((material) => material.dispose());
       tagMaterials.forEach((material) => material.dispose());
@@ -384,7 +324,7 @@ export default function FoodScene({
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [dishes, reduced, onFailure, simulateFailure]);
+  }, [dishes, onFailure, simulateFailure]);
 
   return <div ref={host} className="food-canvas" aria-hidden="true" />;
 }

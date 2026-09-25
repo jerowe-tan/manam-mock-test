@@ -46,9 +46,6 @@ export default function Page() {
                 <br />
                 of <em>stories.</em>
               </h1>
-              <a className="text-link" href="#dish-details">
-                Scroll to explore <span aria-hidden="true">↓</span>
-              </a>
             </div>
           }
           tableIntro={
@@ -75,7 +72,11 @@ export default function Page() {
             </div>
           }
         />
-        <section className="menu-notes" aria-label="Dish ingredients">
+        <section
+          className="menu-notes"
+          id="menu-cards"
+          aria-label="Dish ingredients"
+        >
           {dishes.map((d) => (
             <article key={d.id}>
               <img

@@ -17,6 +17,7 @@ import {
   type Selection,
   type Size,
 } from "@/lib/types";
+import { dishTravel, INTRO_END, tourProgress } from "@/lib/tour";
 
 const Scene = dynamic(() => import("./FoodScene"), {
   ssr: false,
@@ -58,9 +59,6 @@ export default function Experience({
   const [mode, setMode] = useState<"2D" | "3D">("2D");
   const [reduced, setReduced] = useState(true);
   const [failed, setFailed] = useState(false);
-  const [playing, setPlaying] = useState(false);
-  const [journeyVisible, setJourneyVisible] = useState(true);
-  const [pageVisible, setPageVisible] = useState(true);
   const heroShell = useRef<HTMLDivElement>(null);
   const heroFrame = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<Selection[]>([]);
@@ -85,13 +83,9 @@ export default function Experience({
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
     setReduced(media.matches);
     setMode(media.matches ? "2D" : "3D");
-    setPlaying(!media.matches);
     const change = () => {
       setReduced(media.matches);
-      if (media.matches) {
-        setMode("2D");
-        setPlaying(false);
-      }
+      if (media.matches) setMode("2D");
     };
     media.addEventListener("change", change);
     return () => {
@@ -100,34 +94,25 @@ export default function Experience({
     };
   }, []);
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => setJourneyVisible(entry.isIntersecting),
-      { threshold: 0.2 },
-    );
-    if (heroShell.current) observer.observe(heroShell.current);
-    const visibility = () => setPageVisible(!document.hidden);
-    document.addEventListener("visibilitychange", visibility);
-    return () => {
-      observer.disconnect();
-      document.removeEventListener("visibilitychange", visibility);
-    };
-  }, []);
-  useEffect(() => {
     const shell = heroShell.current;
     const frame = heroFrame.current;
     if (!shell || !frame) return;
     const reveal = () => {
-      const distance = Math.max(1, shell.offsetHeight - window.innerHeight);
-      const progress = Math.max(
-        0,
-        Math.min(1, -shell.getBoundingClientRect().top / distance),
-      );
-      frame.style.setProperty("--hero-opacity", String(1 - progress));
-      frame.style.setProperty("--scene-gray", String((1 - progress) * 0.5));
-      frame.style.setProperty("--scene-bright", String(0.78 + progress * 0.22));
-      frame
-        .querySelector(".hero-copy")
-        ?.toggleAttribute("inert", progress > 0.98);
+      const progress = tourProgress(shell);
+      const intro = Math.max(0, 1 - progress / INTRO_END);
+      frame.style.setProperty("--hero-opacity", String(intro));
+      frame.style.setProperty("--scene-gray", String(intro * 0.5));
+      frame.style.setProperty("--scene-bright", String(1 - intro * 0.22));
+      frame.querySelector(".hero-copy")?.toggleAttribute("inert", intro < 0.02);
+      const bounds = shell.getBoundingClientRect();
+      if (
+        bounds.bottom > 0 &&
+        bounds.top < window.innerHeight &&
+        dishes.length
+      ) {
+        const next = dishes[Math.round(dishTravel(progress, dishes.length))];
+        setActiveId((previous) => (previous === next.id ? previous : next.id));
+      }
     };
     reveal();
     window.addEventListener("scroll", reveal, { passive: true });
@@ -136,31 +121,7 @@ export default function Experience({
       window.removeEventListener("scroll", reveal);
       window.removeEventListener("resize", reveal);
     };
-  }, []);
-  useEffect(() => {
-    if (
-      !playing ||
-      reduced ||
-      !journeyVisible ||
-      !pageVisible ||
-      filtered.length < 2
-    )
-      return;
-    const timer = window.setTimeout(
-      () => setActiveId(filtered[(position + 1) % filtered.length].id),
-      position === 0 ? 10000 : 7000,
-    );
-    return () => window.clearTimeout(timer);
-  }, [
-    playing,
-    reduced,
-    journeyVisible,
-    pageVisible,
-    position,
-    category,
-    dishes,
-    filtered,
-  ]);
+  }, [dishes]);
   function update(items: Selection[]) {
     version.current++;
     request.current?.abort();
@@ -236,25 +197,18 @@ export default function Experience({
   }
   return (
     <>
-      <section
-        id="journey"
-        className="journey"
-        aria-labelledby="journey-title"
-        onFocusCapture={(event) => {
-          if ((event.target as HTMLElement).id !== "autoplay-toggle")
-            setPlaying(false);
-        }}
-      >
-        <div ref={heroShell} className="hero-shell">
+      <section id="journey" className="journey" aria-labelledby="journey-title">
+        <div
+          ref={heroShell}
+          className="hero-shell"
+          style={{ height: `${100 + Math.max(1, dishes.length) * 88}svh` }}
+        >
           <div ref={heroFrame} className="hero-composition">
             <div className="stage" data-mode={mode}>
               {dish && mode === "3D" ? (
                 <SceneBoundary onFailure={failScene}>
                   <Scene
-                    index={dish.scene}
                     dishes={dishes}
-                    order={filtered.map((item) => item.scene)}
-                    reduced={reduced}
                     onFailure={failScene}
                     simulateFailure={simulateWebGLFailure}
                   />
@@ -286,35 +240,10 @@ export default function Experience({
             </div>
             <div className="hero-dim" aria-hidden="true" />
             {hero}
+            <a className="hero-menu-link" href="#menu-cards">
+              See menu <span aria-hidden="true">↘</span>
+            </a>
           </div>
-        </div>
-        <div className="autoplay-bar">
-          <span>{dishes.length} favorites. One delicious journey.</span>
-          <div className="mode-switch" aria-label="View mode">
-            <button
-              aria-pressed={mode === "3D"}
-              disabled={failed}
-              onClick={() => setMode("3D")}
-            >
-              3D view
-            </button>
-            <button aria-pressed={mode === "2D"} onClick={() => setMode("2D")}>
-              2D view
-            </button>
-          </div>
-          <button
-            id="autoplay-toggle"
-            disabled={reduced || filtered.length < 2}
-            aria-pressed={playing}
-            onClick={() => setPlaying(!playing)}
-          >
-            {reduced ? "Motion reduced" : playing ? "Pause tour" : "Play tour"}
-          </button>
-          <span className="tour-status">
-            {playing
-              ? `Next dish in ${position === 0 ? 10 : 7} seconds`
-              : "Browse at your own pace"}
-          </span>
         </div>
         {failed && (
           <p className="fallback-notice" role="status">
