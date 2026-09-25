@@ -758,6 +758,9 @@ footer > span:last-child {
     justify-content: flex-end;
     padding: 0 6% 19svh;
   }
+  .hero-dim {
+    background: linear-gradient(transparent 46%, #1c292587);
+  }
   .hero-copy h1 {
     font-size: clamp(60px, 13vw, 88px);
     line-height: 0.96;

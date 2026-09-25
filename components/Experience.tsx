@@ -148,7 +148,7 @@ export default function Experience({
       return;
     const timer = window.setTimeout(
       () => setActiveId(filtered[(position + 1) % filtered.length].id),
-      7000,
+      position === 0 ? 10000 : 7000,
     );
     return () => window.clearTimeout(timer);
   }, [
@@ -311,7 +311,9 @@ export default function Experience({
             {reduced ? "Motion reduced" : playing ? "Pause tour" : "Play tour"}
           </button>
           <span className="tour-status">
-            {playing ? "Next dish in 7 seconds" : "Browse at your own pace"}
+            {playing
+              ? `Next dish in ${position === 0 ? 10 : 7} seconds`
+              : "Browse at your own pace"}
           </span>
         </div>
         {failed && (

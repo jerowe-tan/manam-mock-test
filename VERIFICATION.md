@@ -2,7 +2,7 @@
 
 September 25, 2026. Local Windows / Node 24 / Codex in-app browser.
 
-- PASS: revised full-screen hero rendered three food photo planes on two visible shelves at desktop and 390px phone width; text and scroll CTA stayed readable.
+- PASS: full opening view rendered one continuous shelf, all ten food projections and dish tags at desktop and 390px phone width. Close-up showed shelf depth and readable hero text.
 - PASS: manual PageDown inspection showed hero text opacity reach 0, gray filter reach 0, and food scene return to full brightness before dish details.
 - PASS: revised scene and hero passed fresh `npm run typecheck`, `npm test` (18/18), and `npm run build`.
 - PASS: `npm run build`, including production TypeScript compilation and static route generation.
@@ -11,9 +11,9 @@ September 25, 2026. Local Windows / Node 24 / Codex in-app browser.
 - PASS: delayed response regression (`checkDelayedResponse`): pending Small request replaced by Large, latest total ₱595.
 - PASS: failure regression (`checkFailureFallback`): forced WebGL failure shows 2D with working form; forced 503 retains input and retry.
 - PASS: development empty catalog shows empty message, disables both navigation boundaries.
-- PASS: ten reference photographs render in 3D gallery, 2D fallback, thumbnail rail, and server-rendered menu.
-- PASS: live tour advanced between dishes after seven seconds; Pause held same dish beyond seven seconds; Play resumed advancement.
-- PASS: last-to-first 3D wrap keeps forward travel across one photo spacing; inspected transition and landing in browser.
+- PASS: ten reference photographs render in one 3D shelf, 2D fallback, thumbnail rail, and server-rendered menu.
+- PASS: live tour advanced after ten seconds on first dish and seven on later dishes; Pause held current dish; Play resumed advancement.
+- PASS: selected final dish and resumed tour on 390px preview; camera pulled out to all-ten shelf overview during wrap, then returned to first row.
 - PASS: 360px and 390px phone recheck after rail fix; document width fits viewport and rail scrolls within its own bounds. Earlier 768px and desktop checks also passed.
 - PASS: browser console had no warnings or errors during latest normal flow.
 - PASS: read-only standards and spec reviews; fixed render callback error handling, contrast and server/client boundaries; rechecks found no remaining material findings.
