@@ -41,19 +41,13 @@ export default function Page() {
           simulateWebGLFailure={simulateWebGLFailure}
           hero={
             <div key="hero-copy" className="hero-copy">
-              <p className="chapter">Come hungry. Stay a little.</p>
               <h1 id="journey-title">
                 A table full
                 <br />
                 of <em>stories.</em>
               </h1>
-              <p className="hero-description">
-                Take a little trip through Filipino comfort food.
-                <br className="desktop-break" /> The familiar, the unexpected,
-                and the extra rice.
-              </p>
               <a className="text-link" href="#dish-details">
-                Meet your first bite <span aria-hidden="true">↓</span>
+                Scroll to explore <span aria-hidden="true">↓</span>
               </a>
             </div>
           }

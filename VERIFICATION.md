@@ -2,6 +2,9 @@
 
 September 25, 2026. Local Windows / Node 24 / Codex in-app browser.
 
+- PASS: revised full-screen hero rendered three food photo planes on two visible shelves at desktop and 390px phone width; text and scroll CTA stayed readable.
+- PASS: manual PageDown inspection showed hero text opacity reach 0, gray filter reach 0, and food scene return to full brightness before dish details.
+- PASS: revised scene and hero passed fresh `npm run typecheck`, `npm test` (18/18), and `npm run build`.
 - PASS: `npm run build`, including production TypeScript compilation and static route generation.
 - PASS: `npm test`, 18 server, validation, pricing, API and filter tests.
 - PASS: saved browser keyboard/form regression (`checkBrowserFlow`): add, navigate, filter, 2D mode, mixed portion estimate, stale-total clearing, removal focus, empty state.

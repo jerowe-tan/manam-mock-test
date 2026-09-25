@@ -59,10 +59,10 @@ export default function Experience({
   const [reduced, setReduced] = useState(true);
   const [failed, setFailed] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [hovering, setHovering] = useState(false);
   const [journeyVisible, setJourneyVisible] = useState(true);
   const [pageVisible, setPageVisible] = useState(true);
-  const journey = useRef<HTMLElement>(null);
+  const heroShell = useRef<HTMLDivElement>(null);
+  const heroFrame = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<Selection[]>([]);
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [pending, setPending] = useState(false);
@@ -104,7 +104,7 @@ export default function Experience({
       ([entry]) => setJourneyVisible(entry.isIntersecting),
       { threshold: 0.2 },
     );
-    if (journey.current) observer.observe(journey.current);
+    if (heroShell.current) observer.observe(heroShell.current);
     const visibility = () => setPageVisible(!document.hidden);
     document.addEventListener("visibilitychange", visibility);
     return () => {
@@ -113,10 +113,34 @@ export default function Experience({
     };
   }, []);
   useEffect(() => {
+    const shell = heroShell.current;
+    const frame = heroFrame.current;
+    if (!shell || !frame) return;
+    const reveal = () => {
+      const distance = Math.max(1, shell.offsetHeight - window.innerHeight);
+      const progress = Math.max(
+        0,
+        Math.min(1, -shell.getBoundingClientRect().top / distance),
+      );
+      frame.style.setProperty("--hero-opacity", String(1 - progress));
+      frame.style.setProperty("--scene-gray", String((1 - progress) * 0.5));
+      frame.style.setProperty("--scene-bright", String(0.78 + progress * 0.22));
+      frame
+        .querySelector(".hero-copy")
+        ?.toggleAttribute("inert", progress > 0.98);
+    };
+    reveal();
+    window.addEventListener("scroll", reveal, { passive: true });
+    window.addEventListener("resize", reveal);
+    return () => {
+      window.removeEventListener("scroll", reveal);
+      window.removeEventListener("resize", reveal);
+    };
+  }, []);
+  useEffect(() => {
     if (
       !playing ||
       reduced ||
-      hovering ||
       !journeyVisible ||
       !pageVisible ||
       filtered.length < 2
@@ -130,7 +154,6 @@ export default function Experience({
   }, [
     playing,
     reduced,
-    hovering,
     journeyVisible,
     pageVisible,
     position,
@@ -214,7 +237,6 @@ export default function Experience({
   return (
     <>
       <section
-        ref={journey}
         id="journey"
         className="journey"
         aria-labelledby="journey-title"
@@ -223,85 +245,63 @@ export default function Experience({
             setPlaying(false);
         }}
       >
-        <div className="intro-line">
-          <span>FAMILIAR FLAVORS. A FRESH PERSPECTIVE.</span>
-          <span className="edition">A little taste of home / 01</span>
-        </div>
-        <div className="hero-composition">
-          {hero}
-          <div
-            className="stage"
-            data-mode={mode}
-            onMouseEnter={() => setHovering(true)}
-            onMouseLeave={() => setHovering(false)}
-          >
-            <span className="table-lettering" aria-hidden="true">
-              kain tayo!
-            </span>
-            {dish && mode === "3D" ? (
-              <SceneBoundary onFailure={failScene}>
-                <Scene
-                  index={dish.scene}
-                  dishes={dishes}
-                  order={filtered.map((item) => item.scene)}
-                  reduced={reduced}
-                  onFailure={failScene}
-                  simulateFailure={simulateWebGLFailure}
-                />
-              </SceneBoundary>
-            ) : (
-              <div
-                className={`flat-dish flat-${dish?.id ?? "empty"}`}
-                aria-hidden="true"
-              >
-                {dish ? (
-                  <img
-                    className="reference-photo"
-                    src={dish.photo}
-                    alt={dish.name}
-                    width={600}
-                    height={600}
-                    onError={(event) => {
-                      event.currentTarget.style.visibility = "hidden";
-                    }}
+        <div ref={heroShell} className="hero-shell">
+          <div ref={heroFrame} className="hero-composition">
+            <div className="stage" data-mode={mode}>
+              {dish && mode === "3D" ? (
+                <SceneBoundary onFailure={failScene}>
+                  <Scene
+                    index={dish.scene}
+                    dishes={dishes}
+                    order={filtered.map((item) => item.scene)}
+                    reduced={reduced}
+                    onFailure={failScene}
+                    simulateFailure={simulateWebGLFailure}
                   />
-                ) : (
-                  <div className="flat-plate">
-                    <span>Your table</span>
-                    <small>Something good is coming.</small>
-                  </div>
-                )}
-              </div>
-            )}
-            <div className="scene-note">
-              <span className="small-cross" aria-hidden="true">
-                +
-              </span>
-              <span>
-                {mode === "3D"
-                  ? "Manam’s food. A new perspective."
-                  : "Real food, from Manam’s menu."}
-              </span>
+                </SceneBoundary>
+              ) : (
+                <div
+                  className={`flat-dish flat-${dish?.id ?? "empty"}`}
+                  aria-hidden="true"
+                >
+                  {dish ? (
+                    <img
+                      className="reference-photo"
+                      src={dish.photo}
+                      alt={dish.name}
+                      width={600}
+                      height={600}
+                      onError={(event) => {
+                        event.currentTarget.style.visibility = "hidden";
+                      }}
+                    />
+                  ) : (
+                    <div className="flat-plate">
+                      <span>Your table</span>
+                      <small>Something good is coming.</small>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-            <div className="mode-switch" aria-label="View mode">
-              <button
-                aria-pressed={mode === "3D"}
-                disabled={failed}
-                onClick={() => setMode("3D")}
-              >
-                3D view
-              </button>
-              <button
-                aria-pressed={mode === "2D"}
-                onClick={() => setMode("2D")}
-              >
-                2D view
-              </button>
-            </div>
+            <div className="hero-dim" aria-hidden="true" />
+            {hero}
           </div>
         </div>
         <div className="autoplay-bar">
           <span>{dishes.length} favorites. One delicious journey.</span>
+          <div className="mode-switch" aria-label="View mode">
+            <button
+              aria-pressed={mode === "3D"}
+              disabled={failed}
+              onClick={() => setMode("3D")}
+            >
+              3D view
+            </button>
+            <button aria-pressed={mode === "2D"} onClick={() => setMode("2D")}>
+              2D view
+            </button>
+          </div>
           <button
             id="autoplay-toggle"
             disabled={reduced || filtered.length < 2}
@@ -311,9 +311,7 @@ export default function Experience({
             {reduced ? "Motion reduced" : playing ? "Pause tour" : "Play tour"}
           </button>
           <span className="tour-status">
-            {playing && !hovering
-              ? "Next dish in 7 seconds"
-              : "Browse at your own pace"}
+            {playing ? "Next dish in 7 seconds" : "Browse at your own pace"}
           </span>
         </div>
         {failed && (

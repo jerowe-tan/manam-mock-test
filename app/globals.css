@@ -136,110 +136,91 @@ button {
 }
 .journey {
   background: var(--yellow);
-  padding: 0 5%;
+  padding: 0;
 }
-.intro-line {
-  padding: 23px 0;
-  display: flex;
-  justify-content: space-between;
-  font-size: 9px;
-  letter-spacing: 1.6px;
-}
-.edition {
-  letter-spacing: 0.4px;
+.hero-shell {
+  height: 160svh;
+  position: relative;
 }
 .hero-composition {
-  position: relative;
-  min-height: 550px;
-  display: grid;
-  grid-template-columns: 43% 57%;
-  align-items: center;
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  min-height: 560px;
+  overflow: hidden;
+  background: #8b816e;
+  --hero-opacity: 1;
+  --scene-gray: 0.5;
+  --scene-bright: 0.78;
 }
 .hero-copy {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 2;
-  padding: 35px 0 65px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(32px, 7vw, 110px);
+  color: white;
+  opacity: var(--hero-opacity);
   pointer-events: none;
 }
 .hero-copy a {
   pointer-events: auto;
 }
-.chapter {
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 20px;
-  margin: 0 0 25px;
-}
-h1 {
+.hero-copy h1 {
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(64px, 7.8vw, 116px);
-  line-height: 0.94;
+  font-size: clamp(68px, 8.2vw, 130px);
+  line-height: 0.96;
   font-weight: 400;
-  letter-spacing: -6px;
-  margin: 0 0 29px;
+  letter-spacing: -0.055em;
+  margin: 0;
+  max-width: 780px;
+  text-shadow: 0 2px 22px #1720188c;
 }
-h1 em,
+.hero-copy h1 em,
 .table-intro h2 em {
   font-weight: 400;
-}
-.hero-description {
-  font-size: 13px;
-  line-height: 1.9;
-  max-width: 360px;
 }
 .text-link {
   display: inline-flex;
   align-items: center;
   gap: 25px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid currentColor;
   padding: 14px 0 9px;
-  margin-top: 19px;
-  font-size: 12px;
+  margin-top: 38px;
+  font-size: 13px;
 }
 .text-link span {
-  font-size: 21px;
+  font-size: 26px;
 }
 .stage {
-  height: 570px;
-  position: relative;
-  margin-left: -50px;
-  margin-right: -3vw;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  filter: grayscale(var(--scene-gray)) brightness(var(--scene-bright));
 }
 .food-canvas {
   position: absolute;
-  inset: 30px 0 70px;
+  inset: 0;
   width: 100%;
-  height: auto;
+  height: 100%;
 }
 .food-canvas canvas {
   width: 100%;
   height: 100%;
   display: block;
 }
-.table-lettering {
+.hero-dim {
   position: absolute;
-  right: 6%;
-  top: 0;
-  font: italic 24px Georgia;
-  transform: rotate(9deg);
-  opacity: 0.8;
-}
-.scene-note {
-  position: absolute;
-  bottom: 30px;
-  left: 12%;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-size: 10px;
-}
-.small-cross {
-  font-size: 22px;
+  inset: 0;
+  z-index: 1;
+  background: #1c29252b;
+  opacity: var(--hero-opacity);
+  pointer-events: none;
 }
 .mode-switch {
-  position: absolute;
-  right: 4%;
-  bottom: 25px;
   display: flex;
   border: 1px solid var(--line);
   padding: 3px;
@@ -259,6 +240,7 @@ h1 em,
 }
 .dish-strip {
   padding: 27px 0;
+  margin: 0 5%;
   display: grid;
   grid-template-columns: 1.2fr 1fr 0.8fr;
   align-items: center;
@@ -329,6 +311,7 @@ h1 em,
 }
 .journey-controls {
   padding: 15px 0 21px;
+  margin: 0 5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -394,10 +377,11 @@ h1 em,
   display: flex;
   align-items: center;
   gap: 18px;
-  padding-bottom: 15px;
+  padding: 18px 0;
+  margin: 0 5%;
   font-size: 11px;
 }
-.autoplay-bar button {
+.autoplay-bar > button {
   border: 1px solid var(--ink);
   background: transparent;
   padding: 8px 16px;
@@ -408,13 +392,10 @@ h1 em,
   color: var(--muted);
 }
 .reference-photo {
-  width: 75%;
-  max-height: 80%;
-  aspect-ratio: 1;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border: 10px solid var(--paper);
-  box-shadow: 12px 18px 0 #283c3217;
-  transform: rotate(-4deg);
+  display: block;
 }
 .menu-photo {
   display: block;
@@ -435,12 +416,13 @@ footer > a {
   .autoplay-bar {
     font-size: 10px;
     gap: 8px;
+    flex-wrap: wrap;
+  }
+  .autoplay-bar > span:first-child {
+    width: 100%;
   }
   .dish-tabs {
     flex-basis: 100%;
-  }
-  .reference-photo {
-    width: 76%;
   }
 }
 .dish-tabs button[aria-pressed="true"] {
@@ -650,6 +632,7 @@ footer > span:last-child {
 }
 .flat-dish {
   height: 100%;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -722,37 +705,12 @@ footer > span:last-child {
   padding: 12px 25px;
   border: 0;
 }
-@media (min-width: 1550px) {
-  .hero-composition {
-    max-width: 1450px;
-    margin: auto;
-  }
-  .stage {
-    height: 660px;
-  }
-  .hero-copy {
-    padding-left: 3%;
-  }
-}
 @media (max-width: 1050px) {
   .site-header nav {
     gap: 22px;
   }
-  .hero-composition {
-    grid-template-columns: 45% 55%;
-    min-height: 490px;
-  }
-  h1 {
-    font-size: 80px;
-    letter-spacing: -4px;
-  }
-  .stage {
-    height: 490px;
-    margin-left: -60px;
-  }
-  .scene-note {
-    left: 10%;
-    bottom: 65px;
+  .hero-copy h1 {
+    font-size: clamp(68px, 9vw, 100px);
   }
   .dish-strip {
     gap: 20px;
@@ -790,62 +748,24 @@ footer > span:last-child {
   .official-link {
     display: none;
   }
-  .intro-line {
-    font-size: 8px;
-    letter-spacing: 0.9px;
-    padding: 20px 0;
-  }
-  .edition {
-    display: none;
-  }
   .hero-composition {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
     min-height: 0;
   }
+  .hero-shell {
+    height: 145svh;
+  }
   .hero-copy {
-    padding: 25px 0 0;
-    pointer-events: auto;
+    justify-content: flex-end;
+    padding: 0 6% 19svh;
   }
-  .chapter {
-    font-size: 16px;
-    margin-bottom: 20px;
-  }
-  h1 {
-    font-size: clamp(66px, 13vw, 88px);
-    letter-spacing: -3px;
+  .hero-copy h1 {
+    font-size: clamp(60px, 13vw, 88px);
     line-height: 0.96;
-    margin-bottom: 19px;
-  }
-  .hero-description {
-    font-size: 12px;
-    max-width: 310px;
-  }
-  .desktop-break {
-    display: none;
+    max-width: 500px;
   }
   .text-link {
-    margin-top: 5px;
+    margin-top: 22px;
     padding-top: 8px;
-  }
-  .stage {
-    height: 365px;
-    margin: -5px -5vw 0 -5vw;
-  }
-  .table-lettering {
-    font-size: 25px;
-    top: 4%;
-    right: 9%;
-  }
-  .scene-note {
-    font-size: 9px;
-    bottom: 18px;
-    left: 6%;
-  }
-  .mode-switch {
-    bottom: 13px;
-    right: 6%;
   }
   .mode-switch button {
     font-size: 9px;

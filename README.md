@@ -32,7 +32,7 @@ Open http://localhost:3000/experience. Root redirects there.
 
 Reference: https://manam.momentfood.com/, inspected September 22, 2026. Current order page uses teal, photography, and a thin Manam wordmark. User requested yellow; `#f5cf56` is our warm marigold interpretation, not a verified official brand token. Typography uses local Arial and Georgia: an understated wordmark against generous editorial serif headings. No remote font requests.
 
-ENERGY 3 / RHYTHM 3 / MOTION 2. Real food photography is focal point; large yellow opening contrasts with quieter cream tasting area. Photos sit in a Three.js gallery with spatial camera transitions. Tour advances every seven seconds, wraps at the end, and pauses offscreen, on hidden tabs, and while hovering over photography. Keyboard focus/manual navigation stops the tour until Play is pressed. Reduced motion disables autoplay. Thumbnails support direct selection; all ten dishes also appear below with descriptions.
+ENERGY 3 / RHYTHM 3 / MOTION 2. One hero headline sits over a full-screen, three-tier food display. Photographs occupy separate planes in a Three.js scene; camera slides and pushes in between dishes. Scene starts softly gray so headline stays clear, then returns to full color as page scrolls. Hero links to dish details. Tour advances every seven seconds, wraps forward at the end, and pauses offscreen or on hidden tabs. Keyboard focus/manual navigation stops tour until Play is pressed. Reduced motion disables autoplay. Thumbnails support direct selection; all ten dishes also appear below with descriptions.
 
 Photos and dish identities come from the restaurant’s supplied reference. Descriptions are original summaries; portion prices and availability remain demo fixtures. Bibingkang Ube remains unavailable in demo to exercise that state. No claim of official affiliation or current price/stock synchronization.
 
@@ -54,7 +54,7 @@ Copy `.env.example` to `.env.local`. Enable `DEMO_EMPTY`, `DEMO_DELAY`, `DEMO_ER
 - Keyboard: Tab through filters, dish navigation, mode buttons, add, portion, quantity, remove and calculate. Visible focus throughout.
 - Reduced motion: enable OS preference before loading; 2D starts selected. Explicit 3D changes dish without flight.
 - WebGL disabled/context lost: scene switches to 2D; form remains usable.
-- Inspect 360px, tablet and desktop widths, plus 200% zoom. No horizontal overflow.
+- Inspect 360px, tablet and desktop widths, plus 200% zoom. No horizontal overflow. Scroll through hero to check color and headline reveal.
 
 Saved browser regressions live in `tests/browser-flow.mjs`. They use the Codex browser-use Tab interface (no extra browser dependency). In a browser session with a local `tab` handle, import the module by absolute file URL, then run `await checks.checkBrowserFlow(tab)`. Run `checkDelayedResponse(tab)` with `DEMO_DELAY=1`, and `checkFailureFallback(tab)` with `DEMO_WEBGL_FAILURE=1` and `DEMO_ERROR=1`. Functions throw on assertion failure and return a PASS summary. `npm test` runs independent server/selection tests; these browser checks require the running app and browser session.
 
