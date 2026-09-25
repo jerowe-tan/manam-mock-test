@@ -6,23 +6,31 @@ import type { Dish } from "@/lib/types";
 export default function FoodScene({
   index,
   dishes,
+  order,
   reduced,
   onFailure,
   simulateFailure = false,
 }: {
   index: number;
   dishes: Dish[];
+  order: number[];
   reduced: boolean;
   onFailure: () => void;
   simulateFailure?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const target = useRef(index * 7);
+  const previousIndex = useRef(index);
   const wake = useRef<() => void>(() => {});
   useEffect(() => {
-    target.current = index * 7;
+    if (index === previousIndex.current) return;
+    const wrapsForward =
+      previousIndex.current === order[order.length - 1] && index === order[0];
+    const steps = index - previousIndex.current + (wrapsForward ? dishes.length : 0);
+    target.current += steps * 7;
+    previousIndex.current = index;
     wake.current();
-  }, [index]);
+  }, [index, order, dishes.length]);
   useEffect(() => {
     const element = host.current;
     if (!element) return;
@@ -39,6 +47,7 @@ export default function FoodScene({
     element.appendChild(renderer.domElement);
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(38, 1, 0.1, 150);
+    const period = dishes.length * 7;
     const geometry = new T.PlaneGeometry(4.9, 4.9);
     const frameGeometry = new T.BoxGeometry(5.14, 5.4, 0.12);
     const frameMaterial = new T.MeshBasicMaterial({ color: "#faf7ee" });
@@ -64,7 +73,9 @@ export default function FoodScene({
       const distance = width / height < 0.85 ? 10 : 8.6;
       camera.position.set(x + 0.6, 0.45, distance);
       camera.lookAt(x, 0, 0);
-      frames.forEach((group) => {
+      frames.forEach((group, i) => {
+        const base = dishes[i].scene * 7;
+        group.position.x = base + Math.round((x - base) / period) * period;
         group.visible = Math.abs(group.position.x - x) < 8;
       });
       try {

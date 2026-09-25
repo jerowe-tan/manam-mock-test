@@ -243,6 +243,7 @@ export default function Experience({
                 <Scene
                   index={dish.scene}
                   dishes={dishes}
+                  order={filtered.map((item) => item.scene)}
                   reduced={reduced}
                   onFailure={failScene}
                   simulateFailure={simulateWebGLFailure}

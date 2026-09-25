@@ -10,6 +10,7 @@ September 25, 2026. Local Windows / Node 24 / Codex in-app browser.
 - PASS: development empty catalog shows empty message, disables both navigation boundaries.
 - PASS: ten reference photographs render in 3D gallery, 2D fallback, thumbnail rail, and server-rendered menu.
 - PASS: live tour advanced between dishes after seven seconds; Pause held same dish beyond seven seconds; Play resumed advancement.
+- PASS: last-to-first 3D wrap keeps forward travel across one photo spacing; inspected transition and landing in browser.
 - PASS: 360px and 390px phone recheck after rail fix; document width fits viewport and rail scrolls within its own bounds. Earlier 768px and desktop checks also passed.
 - PASS: browser console had no warnings or errors during latest normal flow.
 - PASS: read-only standards and spec reviews; fixed render callback error handling, contrast and server/client boundaries; rechecks found no remaining material findings.
