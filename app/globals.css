@@ -905,7 +905,8 @@ footer > span:last-child {
   }
   .dish-tabs {
     gap: 0;
-    flex: 1;
+    flex: 0 0 100%;
+    min-width: 0;
   }
   .dish-tabs button {
     padding: 10px 8px;
