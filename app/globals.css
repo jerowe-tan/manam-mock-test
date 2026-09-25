@@ -219,8 +219,8 @@ h1 em,
 .table-lettering {
   position: absolute;
   right: 6%;
-  top: 8%;
-  font: italic 33px Georgia;
+  top: 0;
+  font: italic 24px Georgia;
   transform: rotate(9deg);
   opacity: 0.8;
 }
